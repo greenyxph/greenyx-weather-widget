@@ -32,11 +32,15 @@
       box-sizing: border-box;
       text-align: center;
       font-size: 0.65em;
+      position: relative;
+      overflow: hidden;
     }
     .day-card img {
       width: 60px;
       height: 60px;
       margin-bottom: 3px;
+      z-index: 2;
+      position: relative;
     }
     .day-name {
       font-weight: bold;
@@ -56,6 +60,30 @@
       color: #222;
       font-weight: bold;
     }
+    .location {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 0.9em;
+      color: #444;
+    }
+
+    /* Weather Effects */
+    .sunny {
+      background: radial-gradient(circle at top, #fff9c4, #ffe082);
+    }
+    .cloudy {
+      background: linear-gradient(to bottom, #e0e0e0, #bdbdbd);
+    }
+    .rain {
+      background: linear-gradient(to bottom, #90caf9, #64b5f6);
+    }
+    .storm {
+      background: linear-gradient(to bottom, #616161, #212121);
+      color: #fff;
+    }
+    .snow {
+      background: linear-gradient(to bottom, #e3f2fd, #bbdefb);
+    }
 
     @media (max-width: 480px) {
       .day-card {
@@ -73,6 +101,7 @@
 <body>
   <h1>🌤️ 5-Day Weather Forecast</h1>
   <div class="forecast-container" id="forecast"></div>
+  <div class="location" id="location-name">📍 Locating...</div>
 
   <script>
     const apiKey = "b628f02897fc7f24a3175118197ab994";
@@ -89,6 +118,28 @@
 
     function toCelsius(f) {
       return Math.round((f - 32) * 5 / 9);
+    }
+
+    function getWeatherClass(description) {
+      const desc = description.toLowerCase();
+      if (desc.includes("sun")) return "sunny";
+      if (desc.includes("cloud")) return "cloudy";
+      if (desc.includes("rain")) return "rain";
+      if (desc.includes("storm") || desc.includes("thunder")) return "storm";
+      if (desc.includes("snow")) return "snow";
+      return "";
+    }
+
+    function fetchLocationName(lat, lon) {
+      const geoUrl = `https://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lon}&limit=1&appid=${apiKey}`;
+      fetch(geoUrl)
+        .then(res => res.json())
+        .then(data => {
+          const name = data[0]?.name || "Unknown location";
+          const state = data[0]?.state || "";
+          const country = data[0]?.country || "";
+          document.getElementById("location-name").textContent = `📍 ${name}, ${state} ${country}`;
+        });
     }
 
     function fetchWeather(lat, lon) {
@@ -108,13 +159,15 @@
           const days = Object.values(daily).slice(0, 5);
           days.forEach(day => {
             const icon = `https://openweathermap.org/img/wn/${day.weather[0].icon}@2x.png`;
+            const condition = day.weather[0].description;
+            const weatherClass = getWeatherClass(condition);
             const card = document.createElement("div");
-            card.className = "day-card";
+            card.className = `day-card ${weatherClass}`;
             card.innerHTML = `
               <div class="day-name">${getDayName(day.dt_txt)}</div>
               <div class="date">${getFormattedDate(day.dt_txt)}</div>
-              <img src="${icon}" alt="${day.weather[0].description}" />
-              <div class="weather-desc">${day.weather[0].description}</div>
+              <img src="${icon}" alt="${condition}" />
+              <div class="weather-desc">${condition}</div>
               <div class="temp">${toCelsius(day.main.temp_max)}°C</div>
             `;
             forecastContainer.appendChild(card);
@@ -126,9 +179,11 @@
       position => {
         const { latitude, longitude } = position.coords;
         fetchWeather(latitude, longitude);
+        fetchLocationName(latitude, longitude);
       },
       error => {
         alert("Location access denied. Cannot fetch weather.");
+        document.getElementById("location-name").textContent = "📍 Location unavailable";
       }
     );
   </script>

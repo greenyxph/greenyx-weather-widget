@@ -151,67 +151,75 @@
       return "";
     }
 
-    function fetchLocationName(lat, lon) {
-      const geoUrl = `https://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lon}&limit=1&appid=${apiKey}`;
-      fetch(geoUrl)
-        .then(res => res.json())
-        .then(data => {
-          const name = data[0]?.name || "Unknown location";
-          const state = data[0]?.state || "";
-          const country = data[0]?.country || "";
-          document.getElementById("location-name").textContent = `📍 ${name}, ${state} ${country}`;
-        });
+    async function fetchLocationName(lat, lon) {
+      try {
+        const geoUrl = `https://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lon}&limit=1&appid=${apiKey}`;
+        const res = await fetch(geoUrl);
+        const data = await res.json();
+        const name = data[0]?.name || "Unknown";
+        const state = data[0]?.state || "";
+        const country = data[0]?.country || "";
+        document.getElementById("location-name").textContent = `📍 ${name}, ${state} ${country}`;
+      } catch {
+        document.getElementById("location-name").textContent = "📍 Location unavailable";
+      }
     }
 
-    function fetchWeather(lat, lon) {
-      const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=imperial&appid=${apiKey}`;
-      fetch(url)
-        .then(res => res.json())
-        .then(data => {
-          const daily = {};
-          data.list.forEach(item => {
-            const date = item.dt_txt.split(" ")[0];
-            if (!daily[date]) {
-              daily[date] = item;
-            }
-          });
+    async function fetchWeather(lat, lon) {
+      try {
+        const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=imperial&appid=${apiKey}`;
+        const res = await fetch(url);
+        const data = await res.json();
 
-          const forecastContainer = document.getElementById("forecast");
-          forecastContainer.innerHTML = "";
-          const days = Object.values(daily).slice(0, 5);
-          days.forEach(day => {
-            const icon = `https://openweathermap.org/img/wn/${day.weather[0].icon}@2x.png`;
-            const condition = day.weather[0].description;
-            const weatherClass = getWeatherClass(condition);
-            const card = document.createElement("div");
-            card.className = `day-card ${weatherClass}`;
-            card.innerHTML = `
-              <div class="day-name">${getDayName(day.dt_txt)}</div>
-              <div class="date">${getFormattedDate(day.dt_txt)}</div>
-              <img src="${icon}" alt="${condition}" />
-              <div class="weather-desc">${condition}</div>
-              <div class="temp">${toCelsius(day.main.temp_max)}°C</div>
-            `;
-            forecastContainer.appendChild(card);
-          });
-
-          updateTimestamp();
+        const daily = {};
+        data.list.forEach(item => {
+          const date = item.dt_txt.split(" ")[0];
+          if (!daily[date]) {
+            daily[date] = item;
+          }
         });
+
+        const forecastContainer = document.getElementById("forecast");
+        forecastContainer.innerHTML = "";
+        const days = Object.values(daily).slice(0, 5);
+        days.forEach(day => {
+          const icon = `https://openweathermap.org/img/wn/${day.weather[0].icon}@2x.png`;
+          const condition = day.weather[0].description;
+          const weatherClass = getWeatherClass(condition);
+          const card = document.createElement("div");
+          card.className = `day-card ${weatherClass}`;
+          card.innerHTML = `
+            <div class="day-name">${getDayName(day.dt_txt)}</div>
+            <div class="date">${getFormattedDate(day.dt_txt)}</div>
+            <img src="${icon}" alt="${condition}" />
+            <div class="weather-desc">${condition}</div>
+            <div class="temp">${toCelsius(day.main.temp_max)}°C</div>
+          `;
+          forecastContainer.appendChild(card);
+        });
+
+        updateTimestamp();
+      } catch {
+        document.getElementById("forecast").innerHTML = "<p style='text-align:center;'>⚠️ Unable to load forecast.</p>";
+      }
     }
 
     function refreshForecast() {
       navigator.geolocation.getCurrentPosition(
-        position => {
+        async position => {
           const { latitude, longitude } = position.coords;
-          fetchWeather(latitude, longitude);
-          fetchLocationName(latitude, longitude);
+          await fetchLocationName(latitude, longitude);
+          await fetchWeather(latitude, longitude);
         },
         error => {
-          alert("Location access denied. Cannot fetch weather.");
-          document.getElementById("location-name").textContent = "📍 Location unavailable";
+          document.getElementById("location-name").textContent = "📍 Location access denied";
+          document.getElementById("forecast").innerHTML = "<p style='text-align:center;'>⚠️ Cannot fetch weather without location.</p>";
         }
       );
     }
 
     refreshForecast();
-   
+    setInterval(refreshForecast, 600000); // Refresh every 10 minutes
+  </script>
+</body>
+</html>

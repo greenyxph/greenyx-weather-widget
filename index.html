@@ -9,92 +9,111 @@
       font-family: 'Segoe UI', sans-serif;
       background: #f4f6f8;
       margin: 0;
-      padding: 20px;
+      padding: 10px;
     }
     h1 {
       text-align: center;
       color: #333;
+      font-size: 1.5em;
+      margin-bottom: 20px;
     }
     .forecast-container {
       display: flex;
-      gap: 20px;
-      margin-top: 30px;
-      overflow-x: auto;
-      padding-bottom: 10px;
-      scroll-snap-type: x mandatory;
-      -webkit-overflow-scrolling: touch;
+      justify-content: space-between;
+      flex-wrap: nowrap;
+      gap: 5px;
     }
     .day-card {
       background: white;
-      border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-      padding: 20px;
-      width: 160px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      padding: 10px;
+      width: 18%;
+      box-sizing: border-box;
       text-align: center;
-      flex: 0 0 auto;
-      scroll-snap-align: start;
+      font-size: 0.75em;
     }
     .day-card img {
-      width: 60px;
-      height: 60px;
+      width: 40px;
+      height: 40px;
+      margin-bottom: 5px;
     }
     .day-name {
       font-weight: bold;
-      font-size: 1.2em;
-      margin-bottom: 10px;
+      margin-bottom: 5px;
     }
     .weather-desc {
       color: #555;
-      margin-bottom: 10px;
+      margin-bottom: 5px;
     }
     .temp {
-      font-size: 1em;
       color: #222;
     }
 
-    /* Optional: Hide scrollbar on mobile */
-    .forecast-container::-webkit-scrollbar {
-      display: none;
-    }
-    .forecast-container {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
+    @media (max-width: 480px) {
+      .day-card {
+        width: 19%;
+        padding: 8px;
+        font-size: 0.7em;
+      }
+      .day-card img {
+        width: 35px;
+        height: 35px;
+      }
     }
   </style>
 </head>
 <body>
   <h1>🌤️ 5-Day Weather Forecast</h1>
-  <div class="forecast-container">
-    <div class="day-card">
-      <div class="day-name">Monday</div>
-      <img src="https://img.icons8.com/ios/100/heavy-rain.png" alt="Heavy Showers"/>
-      <div class="weather-desc">Heavy Showers</div>
-      <div class="temp">High: 52°F<br>Low: 42°F</div>
-    </div>
-    <div class="day-card">
-      <div class="day-name">Tuesday</div>
-      <img src="https://img.icons8.com/ios/100/snow.png" alt="Light Snow"/>
-      <div class="weather-desc">Light Snow</div>
-      <div class="temp">High: 32°F<br>Low: 25°F</div>
-    </div>
-    <div class="day-card">
-      <div class="day-name">Wednesday</div>
-      <img src="https://img.icons8.com/ios/100/snow.png" alt="Heavy Snow"/>
-      <div class="weather-desc">Heavy Snow</div>
-      <div class="temp">High: 30°F<br>Low: 22°F</div>
-    </div>
-    <div class="day-card">
-      <div class="day-name">Thursday</div>
-      <img src="https://img.icons8.com/ios/100/partly-cloudy-day.png" alt="Partly Cloudy"/>
-      <div class="weather-desc">Partly Cloudy</div>
-      <div class="temp">High: 67°F<br>Low: 56°F</div>
-    </div>
-    <div class="day-card">
-      <div class="day-name">Friday</div>
-      <img src="https://img.icons8.com/ios/100/sun.png" alt="Sunny"/>
-      <div class="weather-desc">Sunny</div>
-      <div class="temp">High: 78°F<br>Low: 68°F</div>
-    </div>
-  </div>
+  <div class="forecast-container" id="forecast"></div>
+
+  <script>
+    const apiKey = "b628f02897fc7f24a3175118197ab994";
+
+    function getDayName(dateStr) {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', { weekday: 'short' });
+    }
+
+    function fetchWeather(lat, lon) {
+      const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=imperial&appid=${apiKey}`;
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          const daily = {};
+          data.list.forEach(item => {
+            const date = item.dt_txt.split(" ")[0];
+            if (!daily[date]) {
+              daily[date] = item;
+            }
+          });
+
+          const forecastContainer = document.getElementById("forecast");
+          const days = Object.values(daily).slice(0, 5);
+          days.forEach(day => {
+            const icon = `https://openweathermap.org/img/wn/${day.weather[0].icon}@2x.png`;
+            const card = document.createElement("div");
+            card.className = "day-card";
+            card.innerHTML = `
+              <div class="day-name">${getDayName(day.dt_txt)}</div>
+              <img src="${icon}" alt="${day.weather[0].description}" />
+              <div class="weather-desc">${day.weather[0].main}</div>
+              <div class="temp">${Math.round(day.main.temp_max)}°F / ${Math.round(day.main.temp_min)}°F</div>
+            `;
+            forecastContainer.appendChild(card);
+          });
+        });
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      position => {
+        const { latitude, longitude } = position.coords;
+        fetchWeather(latitude, longitude);
+      },
+      error => {
+        alert("Location access denied. Cannot fetch weather.");
+      }
+    );
+  </script>
 </body>
 </html>

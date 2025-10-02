@@ -1,46 +1,87 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Live Weather</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🌤️ Weather Forecast</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      text-align: center;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f6f8;
+      margin: 0;
       padding: 20px;
-      background: #e6f7ff;
     }
-    .weather-box {
-      background: #ffffff;
-      padding: 20px;
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    .forecast-container {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-top: 30px;
+    }
+    .day-card {
+      background: white;
       border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      display: inline-block;
-      margin-top: 20px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      padding: 20px;
+      width: 160px;
+      text-align: center;
+    }
+    .day-card img {
+      width: 60px;
+      height: 60px;
+    }
+    .day-name {
+      font-weight: bold;
+      font-size: 1.2em;
+      margin-bottom: 10px;
+    }
+    .weather-desc {
+      color: #555;
+      margin-bottom: 10px;
+    }
+    .temp {
+      font-size: 1em;
+      color: #222;
     }
   </style>
 </head>
 <body>
-  <h2>🌦️ Your Local Weather</h2>
-  <div class="weather-box" id="weather">Detecting your location...</div>
-
-  <script>
-    navigator.geolocation.getCurrentPosition(async (position) => {
-      const lat = position.coords.latitude;
-      const lon = position.coords.longitude;
-
-      const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,wind_speed_10m`);
-      const data = await response.json();
-      const temp = data.current.temperature_2m;
-      const wind = data.current.wind_speed_10m;
-
-      document.getElementById('weather').innerHTML = `
-        📍 Location: ${lat.toFixed(2)}, ${lon.toFixed(2)}<br>
-        🌡️ Temperature: ${temp}°C<br>
-        💨 Wind Speed: ${wind} m/s
-      `;
-    }, () => {
-      document.getElementById('weather').innerText = "Location access denied.";
-    });
-  </script>
+  <h1>🌤️ 5-Day Weather Forecast</h1>
+  <div class="forecast-container">
+    <div class="day-card">
+      <div class="day-name">Monday</div>
+      <img src="https://img.icons8.com/ios/100/heavy-rain.png" alt="Heavy Showers"/>
+      <div class="weather-desc">Heavy Showers</div>
+      <div class="temp">High: 52°F<br>Low: 42°F</div>
+    </div>
+    <div class="day-card">
+      <div class="day-name">Tuesday</div>
+      <img src="https://img.icons8.com/ios/100/snow.png" alt="Light Snow"/>
+      <div class="weather-desc">Light Snow</div>
+      <div class="temp">High: 32°F<br>Low: 25°F</div>
+    </div>
+    <div class="day-card">
+      <div class="day-name">Wednesday</div>
+      <img src="https://img.icons8.com/ios/100/snow.png" alt="Heavy Snow"/>
+      <div class="weather-desc">Heavy Snow</div>
+      <div class="temp">High: 30°F<br>Low: 22°F</div>
+    </div>
+    <div class="day-card">
+      <div class="day-name">Thursday</div>
+      <img src="https://img.icons8.com/ios/100/partly-cloudy-day.png" alt="Partly Cloudy"/>
+      <div class="weather-desc">Partly Cloudy</div>
+      <div class="temp">High: 67°F<br>Low: 56°F</div>
+    </div>
+    <div class="day-card">
+      <div class="day-name">Friday</div>
+      <img src="https://img.icons8.com/ios/100/sun.png" alt="Sunny"/>
+      <div class="weather-desc">Sunny</div>
+      <div class="temp">High: 78°F<br>Low: 68°F</div>
+    </div>
+  </div>
 </body>
 </html>

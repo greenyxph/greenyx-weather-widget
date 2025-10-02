@@ -24,7 +24,6 @@
       gap: 5px;
     }
     .day-card {
-      background: white;
       border-radius: 8px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
       padding: 5px;
@@ -48,16 +47,16 @@
     }
     .date {
       font-size: 0.7em;
-      color: #666;
+      color: #333;
       margin-bottom: 3px;
     }
     .weather-desc {
-      color: #555;
+      color: #222;
       margin-bottom: 3px;
       text-transform: capitalize;
     }
     .temp {
-      color: #222;
+      color: #000;
       font-weight: bold;
     }
     .location,
@@ -67,6 +66,21 @@
       font-size: 0.85em;
       color: #444;
     }
+    .windy-map {
+      width: 100%;
+      height: 400px;
+      margin-top: 20px;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    /* Weather Color Themes */
+    .sunny  { background: radial-gradient(circle at top, #fff9c4, #ffe082); }
+    .cloudy { background: linear-gradient(to bottom, #e0e0e0, #bdbdbd); }
+    .rain   { background: linear-gradient(to bottom, #90caf9, #64b5f6); }
+    .storm  { background: linear-gradient(to bottom, #616161, #212121); color: #fff; }
+    .snow   { background: linear-gradient(to bottom, #e3f2fd, #bbdefb); }
 
     @media (max-width: 480px) {
       .day-card {
@@ -86,6 +100,16 @@
   <div class="forecast-container" id="forecast"></div>
   <div class="location" id="location-name">📍 Locating...</div>
   <div class="updated" id="last-updated">⏱️ Last updated: --</div>
+
+  <!-- 🌬️ Windy Live Map -->
+  <div class="windy-map">
+    <iframe
+      width="100%"
+      height="100%"
+      src="https://embed.windy.com/embed2.html?lat=14.83&lon=120.94&detailLat=14.83&detailLon=120.94&width=100%&height=400&zoom=7&level=surface&overlay=wind&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1"
+      frameborder="0"
+    ></iframe>
+  </div>
 
   <script>
     const apiKey = "b628f02897fc7f24a3175118197ab994";
@@ -117,6 +141,16 @@
       document.getElementById("last-updated").textContent = `⏱️ Last updated: ${formatted}`;
     }
 
+    function getWeatherClass(description) {
+      const desc = description.toLowerCase();
+      if (desc.includes("sun") || desc.includes("clear")) return "sunny";
+      if (desc.includes("cloud")) return "cloudy";
+      if (desc.includes("rain")) return "rain";
+      if (desc.includes("storm") || desc.includes("thunder")) return "storm";
+      if (desc.includes("snow")) return "snow";
+      return "";
+    }
+
     function fetchLocationName(lat, lon) {
       const geoUrl = `https://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lon}&limit=1&appid=${apiKey}`;
       fetch(geoUrl)
@@ -143,13 +177,14 @@
           });
 
           const forecastContainer = document.getElementById("forecast");
-          forecastContainer.innerHTML = ""; // Clear previous
+          forecastContainer.innerHTML = "";
           const days = Object.values(daily).slice(0, 5);
           days.forEach(day => {
             const icon = `https://openweathermap.org/img/wn/${day.weather[0].icon}@2x.png`;
             const condition = day.weather[0].description;
+            const weatherClass = getWeatherClass(condition);
             const card = document.createElement("div");
-            card.className = "day-card";
+            card.className = `day-card ${weatherClass}`;
             card.innerHTML = `
               <div class="day-name">${getDayName(day.dt_txt)}</div>
               <div class="date">${getFormattedDate(day.dt_txt)}</div>
@@ -179,7 +214,4 @@
     }
 
     refreshForecast();
-    setInterval(refreshForecast, 600000); // Refresh every 10 minutes
-  </script>
-</body>
-</html>
+   

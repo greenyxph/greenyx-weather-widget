@@ -42,6 +42,11 @@
       font-weight: bold;
       margin-bottom: 3px;
     }
+    .date {
+      font-size: 0.7em;
+      color: #666;
+      margin-bottom: 3px;
+    }
     .weather-desc {
       color: #555;
       margin-bottom: 3px;
@@ -75,6 +80,15 @@
       return date.toLocaleDateString('en-US', { weekday: 'short' });
     }
 
+    function getFormattedDate(dateStr) {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' });
+    }
+
+    function toCelsius(f) {
+      return Math.round((f - 32) * 5 / 9);
+    }
+
     function fetchWeather(lat, lon) {
       const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=imperial&appid=${apiKey}`;
       fetch(url)
@@ -96,9 +110,10 @@
             card.className = "day-card";
             card.innerHTML = `
               <div class="day-name">${getDayName(day.dt_txt)}</div>
+              <div class="date">${getFormattedDate(day.dt_txt)}</div>
               <img src="${icon}" alt="${day.weather[0].description}" />
               <div class="weather-desc">${day.weather[0].main}</div>
-              <div class="temp">${Math.round(day.main.temp_max)}°F / ${Math.round(day.main.temp_min)}°F</div>
+              <div class="temp">${toCelsius(day.main.temp_max)}°C / ${toCelsius(day.main.temp_min)}°C</div>
             `;
             forecastContainer.appendChild(card);
           });

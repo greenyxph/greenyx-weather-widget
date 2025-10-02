@@ -17,10 +17,12 @@
     }
     .forecast-container {
       display: flex;
-      justify-content: center;
       gap: 20px;
-      flex-wrap: wrap;
       margin-top: 30px;
+      overflow-x: auto;
+      padding-bottom: 10px;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
     }
     .day-card {
       background: white;
@@ -29,6 +31,8 @@
       padding: 20px;
       width: 160px;
       text-align: center;
+      flex: 0 0 auto;
+      scroll-snap-align: start;
     }
     .day-card img {
       width: 60px;
@@ -46,6 +50,15 @@
     .temp {
       font-size: 1em;
       color: #222;
+    }
+
+    /* Optional: Hide scrollbar on mobile */
+    .forecast-container::-webkit-scrollbar {
+      display: none;
+    }
+    .forecast-container {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
     }
   </style>
 </head>

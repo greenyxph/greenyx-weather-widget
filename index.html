@@ -67,6 +67,7 @@
       color: #444;
     }
     .windy-map {
+      position: relative;
       width: 100%;
       height: 400px;
       margin-top: 20px;
@@ -75,12 +76,31 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
 
-    /* Weather Color Themes */
-    .sunny  { background: radial-gradient(circle at top, #fff9c4, #ffe082); }
-    .cloudy { background: linear-gradient(to bottom, #e0e0e0, #bdbdbd); }
-    .rain   { background: linear-gradient(to bottom, #90caf9, #64b5f6); }
-    .storm  { background: linear-gradient(to bottom, #616161, #212121); color: #fff; }
-    .snow   { background: linear-gradient(to bottom, #e3f2fd, #bbdefb); }
+    .beating-dot {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background-color: green;
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+      box-shadow: 0 0 0 rgba(0, 255, 0, 0.4);
+      z-index: 999;
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(0.9);
+        box-shadow: 0 0 0 0 rgba(0, 255, 0, 0.4);
+      }
+      70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 10px rgba(0, 255, 0, 0);
+      }
+      100% {
+        transform: scale(0.9);
+        box-shadow: 0 0 0 0 rgba(0, 255, 0, 0);
+      }
+    }
 
     @media (max-width: 480px) {
       .day-card {
@@ -109,6 +129,7 @@
       src="https://embed.windy.com/embed2.html?lat=14.83&lon=120.94&detailLat=14.83&detailLon=120.94&width=100%&height=400&zoom=7&level=surface&overlay=wind&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1"
       frameborder="0"
     ></iframe>
+    <div id="location-dot" class="beating-dot" style="display:none;"></div>
   </div>
 
   <script>
@@ -204,12 +225,37 @@
       }
     }
 
+    function showLocationDot(lat, lon) {
+      const iframe = document.querySelector(".windy-map iframe");
+      const dot = document.getElementById("location-dot");
+
+      const bounds = {
+        north: 21.0,
+        south: 12.0,
+        east: 126.0,
+        west: 117.0
+      };
+            const iframeRect = iframe.getBoundingClientRect();
+      const mapWidth = iframe.offsetWidth;
+      const mapHeight = iframe.offsetHeight;
+
+      // Calculate approximate pixel position
+      const x = ((lon - bounds.west) / (bounds.east - bounds.west)) * mapWidth;
+      const y = ((bounds.north - lat) / (bounds.north - bounds.south)) * mapHeight;
+
+      // Position the dot
+      dot.style.left = `${x - 10}px`; // center the dot
+      dot.style.top = `${y - 10}px`;
+      dot.style.display = "block";
+    }
+
     function refreshForecast() {
       navigator.geolocation.getCurrentPosition(
         async position => {
           const { latitude, longitude } = position.coords;
           await fetchLocationName(latitude, longitude);
           await fetchWeather(latitude, longitude);
+          showLocationDot(latitude, longitude);
         },
         error => {
           document.getElementById("location-name").textContent = "📍 Location access denied";
@@ -223,3 +269,5 @@
   </script>
 </body>
 </html>
+
+      const

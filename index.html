@@ -67,7 +67,6 @@
       color: #444;
     }
     .windy-map {
-      position: relative;
       width: 100%;
       height: 400px;
       margin-top: 20px;
@@ -76,42 +75,12 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
 
-    .beating-dot {
-      position: absolute;
-      width: 20px;
-      height: 20px;
-      background-color: yellow;
-      border-radius: 50%;
-      animation: pulse 1.5s infinite;
-      box-shadow: 0 0 0 rgba(255, 255, 0, 0.4);
-      z-index: 999;
-    }
-
-    @keyframes pulse {
-      0% {
-        transform: scale(0.9);
-        box-shadow: 0 0 0 0 rgba(255, 255, 0, 0.4);
-      }
-      70% {
-        transform: scale(1);
-        box-shadow: 0 0 0 10px rgba(255, 255, 0, 0);
-      }
-      100% {
-        transform: scale(0.9);
-        box-shadow: 0 0 0 0 rgba(255, 255, 0, 0);
-      }
-    }
-
-    #locate-button {
-      display: block;
-      margin: 10px auto;
-      padding: 8px 16px;
-      background-color: #ffd600;
-      border: none;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-    }
+    /* Weather Color Themes */
+    .sunny  { background: radial-gradient(circle at top, #fff9c4, #ffe082); }
+    .cloudy { background: linear-gradient(to bottom, #e0e0e0, #bdbdbd); }
+    .rain   { background: linear-gradient(to bottom, #90caf9, #64b5f6); }
+    .storm  { background: linear-gradient(to bottom, #616161, #212121); color: #fff; }
+    .snow   { background: linear-gradient(to bottom, #e3f2fd, #bbdefb); }
 
     @media (max-width: 480px) {
       .day-card {
@@ -132,8 +101,6 @@
   <div class="location" id="location-name">📍 Locating...</div>
   <div class="updated" id="last-updated">⏱️ Last updated: --</div>
 
-  <button id="locate-button">📍 My Location</button>
-
   <!-- 🌬️ Windy Live Map -->
   <div class="windy-map">
     <iframe
@@ -142,13 +109,10 @@
       src="https://embed.windy.com/embed2.html?lat=14.83&lon=120.94&detailLat=14.83&detailLon=120.94&width=100%&height=400&zoom=7&level=surface&overlay=wind&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1"
       frameborder="0"
     ></iframe>
-    <div id="location-dot" class="beating-dot" style="display:none;"></div>
   </div>
 
   <script>
     const apiKey = "b628f02897fc7f24a3175118197ab994";
-    let userLat = null;
-    let userLon = null;
 
     function getDayName(dateStr) {
       const date = new Date(dateStr);
@@ -236,49 +200,16 @@
 
         updateTimestamp();
       } catch {
-                document.getElementById("forecast").innerHTML = "<p style='text-align:center;'>⚠️ Unable to load forecast.</p>";
+        document.getElementById("forecast").innerHTML = "<p style='text-align:center;'>⚠️ Unable to load forecast.</p>";
       }
     }
-
-    function showLocationDot(lat, lon) {
-      const iframe = document.querySelector(".windy-map iframe");
-      const dot = document.getElementById("location-dot");
-
-      const bounds = {
-        north: 21.0,
-        south: 12.0,
-        east: 126.0,
-        west: 117.0
-      };
-
-      const mapWidth = iframe.offsetWidth;
-      const mapHeight = iframe.offsetHeight;
-
-      const x = ((lon - bounds.west) / (bounds.east - bounds.west)) * mapWidth;
-      const y = ((bounds.north - lat) / (bounds.north - bounds.south)) * mapHeight;
-
-      dot.style.left = `${x - 10}px`;
-      dot.style.top = `${y - 10}px`;
-      dot.style.display = "block";
-    }
-
-    document.getElementById("locate-button").addEventListener("click", () => {
-      const mapDiv = document.querySelector(".windy-map");
-      mapDiv.scrollIntoView({ behavior: "smooth" });
-
-      if (userLat && userLon) {
-        showLocationDot(userLat, userLon);
-      }
-    });
 
     function refreshForecast() {
       navigator.geolocation.getCurrentPosition(
         async position => {
-          userLat = position.coords.latitude;
-          userLon = position.coords.longitude;
-          await fetchLocationName(userLat, userLon);
-          await fetchWeather(userLat, userLon);
-          showLocationDot(userLat, userLon);
+          const { latitude, longitude } = position.coords;
+          await fetchLocationName(latitude, longitude);
+          await fetchWeather(latitude, longitude);
         },
         error => {
           document.getElementById("location-name").textContent = "📍 Location access denied";
